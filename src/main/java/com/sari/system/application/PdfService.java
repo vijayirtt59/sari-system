@@ -18,6 +18,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -37,6 +38,8 @@ public class PdfService {
 
     private final FormTemplateRepository formTemplateRepository;
     private final SectionRepository sectionRepository;
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     public byte[] generatePro(Pro pro) {
 
@@ -435,7 +438,7 @@ public class PdfService {
                 <div style='text-align:center;margin-top:10px;margin-bottom:10px;'>
         
                     <img
-                        src='http://localhost:8080/uploads/templates/firmas.png'
+                        src='%s/uploads/templates/firmas.png'
                         style='
                             width:50%;
                             border:1px solid #999;
@@ -443,7 +446,7 @@ public class PdfService {
                     />
         
                 </div>
-                """
+                """.formatted(baseUrl)
         );
 
         html = html.replace(
@@ -452,7 +455,7 @@ public class PdfService {
                 <div style='text-align:center;margin-top:10px;margin-bottom:10px;'>
         
                     <img
-                        src='http://localhost:8080/uploads/templates/control-cambios.png'
+                        src='%s/uploads/templates/control-cambios.png'
                         style='
                             width:50%;
                             border:1px solid #999;
@@ -460,7 +463,7 @@ public class PdfService {
                     />
         
                 </div>
-                """
+                """.formatted(baseUrl)
         );
 
         html = html.replace(
@@ -469,7 +472,7 @@ public class PdfService {
                 <div style='text-align:center;margin-top:10px;margin-bottom:10px;'>
         
                     <img
-                        src='http://localhost:8080/uploads/templates/registros.png'
+                        src='%s/uploads/templates/registros.png'
                         style='
                             width:50%;
                             border:1px solid #999;
@@ -477,7 +480,7 @@ public class PdfService {
                     />
         
                 </div>
-                """
+                """.formatted(baseUrl)
         );
 
         // =====================================================
@@ -520,7 +523,7 @@ public class PdfService {
                 </h4>
 
                 <img
-                    src='http://localhost:8080%s'
+                    src='%s%s'
                     style='
                         width:50%%;
                         border:1px solid #999;
@@ -531,6 +534,7 @@ public class PdfService {
             """.formatted(
                     form.getCode(),
                     form.getTitle(),
+                    baseUrl,
                     form.getImageUrl()
             );
 
@@ -586,7 +590,7 @@ public class PdfService {
 
                         
                                       <img
-                                                  src='http://localhost:8080%s'
+                                                  src='%s%s'
                                                   style='
                                                       width:30%%;
                                                       max-width:220px;
@@ -601,6 +605,7 @@ public class PdfService {
                     """.formatted(
                     section.getCode(),
                     section.getTitle(),
+                    baseUrl,
                     section.getImageUrl()
             );
 
