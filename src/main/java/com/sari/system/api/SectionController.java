@@ -3,6 +3,7 @@ package com.sari.system.api;
 
 import com.sari.system.application.PdfService;
 import com.sari.system.domain.Section;
+import com.sari.system.infrastructure.ProRepository;
 import com.sari.system.infrastructure.SectionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ public class SectionController {
 
     private final SectionRepository repo;
     private final PdfService pdfService;
+    private final ProRepository proRepository;
 
 
     @PostMapping
@@ -107,6 +109,12 @@ public class SectionController {
                         "attachment; filename=" + s.getCode() + ".pdf")
                 .header("Content-Type", "application/pdf")
                 .body(pdf);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        repo.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 
 
