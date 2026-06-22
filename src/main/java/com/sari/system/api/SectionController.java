@@ -34,6 +34,7 @@ public class SectionController {
             Section db = existing.get();
             db.setTitle(s.getTitle());
             db.setContent(s.getContent());
+            db.setName(s.getName());
 
             saved = repo.save(db);
 

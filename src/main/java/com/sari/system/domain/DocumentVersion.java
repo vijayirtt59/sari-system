@@ -24,16 +24,16 @@ public class DocumentVersion {
 
 
     // ✅ CONTENT SECTIONS (RICH HTML)
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String objetivo;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String alcance;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String procedimiento;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String registros;
     @ManyToMany
     private List<Section> sections;
@@ -42,7 +42,7 @@ public class DocumentVersion {
 
 
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     private String preparedBy;

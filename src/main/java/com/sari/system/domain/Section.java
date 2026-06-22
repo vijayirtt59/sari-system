@@ -19,7 +19,7 @@ public class Section {
     private String name;
     private LocalDate documentDate;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     private int orderIndex;

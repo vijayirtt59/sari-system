@@ -22,7 +22,6 @@ public class Docs {
 
     private LocalDate date;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String content;
 
