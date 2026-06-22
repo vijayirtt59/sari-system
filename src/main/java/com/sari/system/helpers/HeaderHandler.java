@@ -17,7 +17,8 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
 
-import java.net.MalformedURLException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 
 
@@ -102,13 +103,21 @@ public class HeaderHandler implements IEventHandler {
 
         try {
 
-            logo = new Image(
-                    ImageDataFactory.create(
-                            "src/main/resources/logo.png"
-                    )
-            );
+            InputStream is =
+                    getClass()
+                            .getClassLoader()
+                            .getResourceAsStream("logo.png");
 
-        } catch (MalformedURLException e) {
+            if (is != null) {
+
+                logo = new Image(
+                        ImageDataFactory.create(
+                                is.readAllBytes()
+                        )
+                );
+            }
+
+        } catch (IOException e) {
 
             e.printStackTrace();
         }
