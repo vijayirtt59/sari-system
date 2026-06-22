@@ -3,7 +3,6 @@ package com.sari.system.api;
 
 import com.sari.system.application.PdfService;
 import com.sari.system.domain.Section;
-import com.sari.system.infrastructure.ProRepository;
 import com.sari.system.infrastructure.SectionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +19,6 @@ public class SectionController {
 
     private final SectionRepository repo;
     private final PdfService pdfService;
-    private final ProRepository proRepository;
 
 
     @PostMapping
@@ -46,7 +44,14 @@ public class SectionController {
             saved = repo.save(s);
         }
 
-        pdfService.generateSectionPdf(saved);   // ✅ regenerate PDF
+        pdfService.generateSectionPdf(saved);
+
+        String imageUrl =
+                pdfService.generateSectionPreview(saved);
+
+        saved.setImageUrl(imageUrl);
+
+        saved = repo.save(saved);
 
         return saved;
     }
