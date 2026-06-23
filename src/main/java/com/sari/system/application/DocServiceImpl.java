@@ -6,12 +6,17 @@ import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.sari.system.domain.Docs;
+import com.sari.system.domain.DocumentChange;
 import com.sari.system.helpers.HeaderHandler;
 import com.sari.system.infrastructure.DocRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import static org.springframework.util.StringUtils.hasText;
 
 @Service
 public class DocServiceImpl implements DocService {
@@ -26,6 +31,18 @@ public class DocServiceImpl implements DocService {
     // ✅ CREATE
     @Override
     public Docs create(Docs docs) {
+        boolean approved =
+                hasText(docs.getPreparedBy())
+                        &&
+                        hasText(docs.getReviewedBy())
+                        &&
+                        hasText(docs.getApprovedBy());
+
+        docs.setStatus(
+                approved
+                        ? "APPROVED"
+                        : "DRAFT"
+        );
         return repo.save(docs);
     }
 
@@ -41,6 +58,21 @@ public class DocServiceImpl implements DocService {
         existing.setName(doc.getName());
         existing.setContent(doc.getContent());
         existing.setDate(doc.getDate());
+
+        DocumentChange change =
+                new DocumentChange();
+
+        change.setVersion(existing.getVersion() + 1);
+
+        change.setDescription(
+                doc.getChangeDescription()
+        );
+
+        change.setChangeDate(
+                LocalDate.now()
+        );
+
+        existing.getChanges().add(change);
 
         return repo.save(existing);
     }
@@ -70,6 +102,13 @@ public class DocServiceImpl implements DocService {
 
         Docs docs = getByCode(code);
 
+        String workflowTable =
+                buildWorkflowTable(docs);
+
+        String changeTable =
+                buildChangeTable(docs);
+
+
         String html = """
                 <html>
                 <head>
@@ -86,40 +125,26 @@ public class DocServiceImpl implements DocService {
                     text-align: justify;
                 }
 
-                p {
-                    margin: 8px 0;
-                }
-
-                ul, ol {
-                    margin-left: 25px;
-                }
-
-                h1 {
-                    font-size: 16px;
-                    font-weight: bold;
-                    text-decoration: underline;
-                }
-
-                h2 {
-                    font-size: 14px;
-                    font-weight: bold;
-                }
-
-                h3 {
-                    font-size: 13px;
-                    margin-left: 10px;
-                }
-
                 </style>
                 </head>
 
                 <body>
-
+                                
                 %s
-
+                                
+                %s
+                                
+                <div style="page-break-before:always;"></div>
+                                
+                %s
+                                
                 </body>
                 </html>
-                """.formatted(safe(docs.getContent()));
+                """.formatted(
+                workflowTable,
+                changeTable,
+                safe(docs.getContent())
+        );
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -142,6 +167,110 @@ public class DocServiceImpl implements DocService {
 
     private String safe(Object val) {
         return val == null ? "" : val.toString();
+    }
+
+    private String buildWorkflowTable(Docs docs) {
+
+        return """
+                    
+                                                                                         <table border="1"
+                                                                                                    cellspacing="0"
+                                                                                                    cellpadding="5"
+                                                                                                    style="
+                                                                                                         border-collapse:collapse;
+                                                                                                         margin-top:60px;
+                                                                                                         margin-bottom:25px;
+                                                                                                    ">
+
+                    <tr>
+                        <th width="300">ELABORADO POR</th>
+                        <th width="300">REVISADO POR</th>
+                        <th width="300">APROBADO POR</th>
+                    </tr>
+
+                    <tr>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                    </tr>
+
+                    <tr>
+                        <td>Nombre y firma</td>
+                        <td>Nombre y firma</td>
+                        <td>Nombre y firma</td>
+                    </tr>
+
+                    <tr>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                    </tr>
+
+                </table>
+                """
+                .formatted(
+                        safe(docs.getPreparedBy()),
+                        safe(docs.getReviewedBy()),
+                        safe(docs.getApprovedBy()),
+                        safeDate(docs.getPreparedDate()),
+                        safeDate(docs.getReviewedDate()),
+                        safeDate(docs.getApprovedDate())
+                );
+    }
+
+    private String safeDate(LocalDate date) {
+
+        if (date == null) {
+            return "";
+        }
+
+        return date.format(
+                DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        );
+    }
+
+    private String buildChangeTable(Docs docs) {
+
+        StringBuilder html = new StringBuilder();
+
+        html.append("""
+                    <table border="1"
+                                                                                cellspacing="0"
+                                                                                cellpadding="5"
+                                                                                style="
+                                                                                     border-collapse:collapse;
+                                                                                     margin-top:60px;
+                                                                                ">
+
+                        <tr>
+                            <th width="200">VERSION</th>
+                            <th width="500">CAMBIO</th>
+                            <th width="200">FECHA</th>
+                        </tr>
+                """);
+
+        if (docs.getChanges() != null) {
+
+            for (DocumentChange c : docs.getChanges()) {
+
+                html.append("""
+                            <tr>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                            </tr>
+                        """
+                        .formatted(
+                                safe(c.getVersion()),
+                                safe(c.getDescription()),
+                                safeDate(c.getChangeDate())
+                        ));
+            }
+        }
+
+        html.append("</table>");
+
+        return html.toString();
     }
 
 }
