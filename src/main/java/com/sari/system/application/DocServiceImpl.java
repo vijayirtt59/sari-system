@@ -9,18 +9,24 @@ import com.sari.system.domain.Docs;
 import com.sari.system.domain.DocumentChange;
 import com.sari.system.helpers.HeaderHandler;
 import com.sari.system.infrastructure.DocRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.springframework.util.StringUtils.hasText;
 
 @Service
 public class DocServiceImpl implements DocService {
 
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     private final DocRepository repo;
 
@@ -108,6 +114,11 @@ public class DocServiceImpl implements DocService {
         String changeTable =
                 buildChangeTable(docs);
 
+        String content =
+                replaceImages(
+                        safe(docs.getContent())
+                );
+
 
         String html = """
                 <html>
@@ -120,11 +131,53 @@ public class DocServiceImpl implements DocService {
 
                 body {
                     font-family: Arial;
-                    font-size: 16px;
+                    font-size: 15px;
                     line-height: 1.6;
                     text-align: justify;
                 }
-
+                                
+                table {
+                    border-collapse: collapse;
+                }
+                                
+                table td,
+                table th {
+                    border: 1px solid black;
+                    padding: 5px;
+                }
+                                
+                table td {
+                    text-align: left;
+                    vertical-align: top;
+                }
+                                
+                table th {
+                    text-align: center;
+                    vertical-align: middle;
+                }
+                                
+                figure.table {
+                    margin-top: 10px;
+                    margin-bottom: 10px;
+                }              
+                                
+                table {
+                    page-break-inside: auto;
+                }
+                                
+                tr {
+                    page-break-inside: avoid;
+                    page-break-after: auto;
+                }
+                                
+                td {
+                    page-break-inside: avoid;
+                }
+                                
+                th {
+                    page-break-inside: avoid;
+                }
+                                
                 </style>
                 </head>
 
@@ -143,7 +196,7 @@ public class DocServiceImpl implements DocService {
                 """.formatted(
                 workflowTable,
                 changeTable,
-                safe(docs.getContent())
+                content
         );
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -157,6 +210,11 @@ public class DocServiceImpl implements DocService {
         );
 
         ConverterProperties props = new ConverterProperties();
+
+        props.setBaseUri(
+                baseUrl
+        );
+
 
         HtmlConverter.convertToPdf(html, pdfDoc, props);
 
@@ -272,5 +330,53 @@ public class DocServiceImpl implements DocService {
 
         return html.toString();
     }
+
+
+    private String replaceImages(String html) {
+
+        if (html == null) {
+            return "";
+        }
+
+        Pattern pattern =
+                Pattern.compile("\\[IMAGE:([^\\]]+)]");
+
+        Matcher matcher =
+                pattern.matcher(html);
+
+        StringBuffer result =
+                new StringBuffer();
+
+        while (matcher.find()) {
+
+            String fileName =
+                    matcher.group(1);
+
+            String imgTag = """
+                    <div style="text-align:center; margin:15px 0;">
+                        <img
+                            src="%s/doc/%s"
+                            
+                                                                     style="
+                                                                         max-width:500px;
+                                                                         height:auto;
+                                                                         margin-top:10px;
+                                                                         margin-bottom:10px;
+                                                                     "
+                        />
+                    </div>
+                    """.formatted(baseUrl, fileName);
+
+            matcher.appendReplacement(
+                    result,
+                    Matcher.quoteReplacement(imgTag)
+            );
+        }
+
+        matcher.appendTail(result);
+
+        return result.toString();
+    }
+
 
 }
