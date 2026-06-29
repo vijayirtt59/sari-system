@@ -23,7 +23,7 @@ public class FileConversionService {
                 libreOfficePath,
                 "--headless",
                 "--convert-to",
-                "pdf:calc_pdf_Export:{\"ScaleToPagesX\":1}",
+                "pdf:calc_pdf_Export:{\"SinglePageSheets\":true}",
                 inputPath,
                 "--outdir", outDir
         );
@@ -58,7 +58,7 @@ public class FileConversionService {
         PDFRenderer renderer = new PDFRenderer(document);
 
         // ✅ Increase DPI for better clarity
-        BufferedImage image = renderer.renderImageWithDPI(0, 350);
+        BufferedImage image = renderer.renderImageWithDPI(0, 600);
 
         ImageIO.write(image, "PNG", new File(imagePath));
 
