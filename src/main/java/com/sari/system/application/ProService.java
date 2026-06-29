@@ -40,15 +40,6 @@ public class ProService {
 
         map(p, req);
 
-        Pro saved =
-                proRepository.save(p);
-
-        log(
-                "CREATED",
-                saved.getCode(),
-                req.getUpdatedBy()
-        );
-
         boolean workflowProvided =
                 hasText(req.getPreparedBy())
                         && hasText(req.getReviewedBy())
@@ -70,6 +61,15 @@ public class ProService {
 
             p.setStatus("DRAFT");
         }
+
+        Pro saved =
+                proRepository.save(p);
+
+        log(
+                "CREATED",
+                saved.getCode(),
+                req.getUpdatedBy()
+        );
 
         return saved;
     }
