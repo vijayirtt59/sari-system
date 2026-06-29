@@ -7,8 +7,12 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.sari.system.domain.Docs;
 import com.sari.system.domain.DocumentChange;
+import com.sari.system.domain.SystemRole;
+import com.sari.system.domain.User;
 import com.sari.system.helpers.HeaderHandler;
 import com.sari.system.infrastructure.DocRepository;
+import com.sari.system.infrastructure.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +26,7 @@ import java.util.regex.Pattern;
 import static org.springframework.util.StringUtils.hasText;
 
 @Service
+@RequiredArgsConstructor
 public class DocServiceImpl implements DocService {
 
 
@@ -29,10 +34,7 @@ public class DocServiceImpl implements DocService {
     private String baseUrl;
 
     private final DocRepository repo;
-
-    public DocServiceImpl(DocRepository repo) {
-        this.repo = repo;
-    }
+    private final UserRepository userRepository;
 
     // ✅ CREATE
     @Override
@@ -223,6 +225,77 @@ public class DocServiceImpl implements DocService {
         return out.toByteArray();
     }
 
+    public String getWorkflowName(User user) {
+
+        String fullName = user.getFullName();
+
+        if (user.getProfessionalTitle() == null ||
+                user.getProfessionalTitle().isBlank()) {
+
+            return fullName;
+        }
+
+        return user.getProfessionalTitle() + " " + fullName;
+    }
+
+    @Override
+    public Docs action(
+            Long id,
+            String action,
+            Long userId
+    ) {
+        User user = userRepository.findById(userId).orElseThrow();
+        String workflowName = getWorkflowName(user);
+        Docs doc = repo.findById(id)
+                .orElseThrow();
+
+        switch (action) {
+
+            case "PREPARE" -> {
+                requireRole(user,SystemRole.PREPARER);
+
+                doc.setPreparedBy(workflowName);
+
+                doc.setPreparedDate(
+                        LocalDate.now()
+                );
+
+                doc.setStatus("PREPARED");
+            }
+
+            case "REVIEW" -> {
+
+                requireRole(user, SystemRole.REVIEWER);
+                validateReview(user,doc);
+
+                doc.setReviewedBy(workflowName);
+
+                doc.setReviewedDate(
+                        LocalDate.now()
+                );
+
+                doc.setStatus("REVIEWED");
+            }
+
+            case "APPROVE" -> {
+
+                requireRole(user,SystemRole.APPROVER   );
+
+                validateApprove(user,doc);
+
+                doc.setApprovedBy(workflowName);
+
+                doc.setApprovedDate(
+                        LocalDate.now()
+                );
+
+                doc.setStatus("APPROVED");
+            }
+        }
+
+        return repo.save(doc);
+    }
+
     private String safe(Object val) {
         return val == null ? "" : val.toString();
     }
@@ -377,6 +450,66 @@ public class DocServiceImpl implements DocService {
 
         return result.toString();
     }
+
+    private void requireRole(
+            User user,
+            SystemRole role
+    ) {
+
+        if (!user.getSystemRoles()
+                .contains(role)) {
+
+            throw new RuntimeException(
+                    "User lacks role: " + role
+            );
+        }
+    }
+
+    private void validateApprove(
+            User user,
+            Docs doc
+    ) {
+
+        String currentUser =
+                user.getFullName();
+
+        if (currentUser.equals(
+                doc.getPreparedBy()
+        )) {
+
+            throw new RuntimeException(
+                    "You cannot approve your own document."
+            );
+        }
+
+        if (currentUser.equals(
+                doc.getReviewedBy()
+        )) {
+
+            throw new RuntimeException(
+                    "Reviewer cannot approve the same document."
+            );
+        }
+    }
+
+    private void validateReview(
+            User user,
+            Docs doc
+    ) {
+
+        String currentUser =
+                user.getFullName();
+
+        if (currentUser.equals(
+                doc.getPreparedBy()
+        )) {
+
+            throw new RuntimeException(
+                    "You cannot review your own document."
+            );
+        }
+    }
+
 
 
 }

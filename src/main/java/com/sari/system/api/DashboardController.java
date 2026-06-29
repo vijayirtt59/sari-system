@@ -1,17 +1,28 @@
 package com.sari.system.api;
 
 
+import com.sari.system.application.DashboardService;
+import com.sari.system.domain.BusinessRole;
 import com.sari.system.domain.Pro;
-import com.sari.system.infrastructure.ProRepository;
+import com.sari.system.domain.User;
+import com.sari.system.dto.DashboardOverview;
+import com.sari.system.dto.DocumentSummary;
+import com.sari.system.dto.MyResponsibilities;
+import com.sari.system.dto.PendingItem;
+import com.sari.system.infrastructure.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/dashboard")
@@ -19,63 +30,40 @@ import java.util.Map;
 @CrossOrigin
 public class DashboardController {
 
-
-    private final ProRepository proRepository;
-
-    @GetMapping("/stats")
-    public Map<String, Object> stats() {
-
-        Map<String, Object> map =
-                new HashMap<>();
-
-        long total =
-                proRepository.count();
-
-        long approved =
-                proRepository.countByStatus("APPROVED");
-
-        long reviewed =
-                proRepository.countByStatus("REVIEWED");
-
-        long prepared =
-                proRepository.countByStatus("PREPARED");
-
-        long draft =
-                proRepository.countByStatus("DRAFT");
-
-        map.put("total", total);
-
-        map.put("approved", approved);
-
-        map.put("reviewed", reviewed);
-
-        map.put("prepared", prepared);
-
-        map.put("draft", draft);
-
-        return map;
-    }
+    private final DashboardService dashboardService;
+    private final UserRepository userRepository;
 
     @GetMapping("/pending")
-    public List<Map<String, Object>> pending() {
+    public List<PendingItem> pending() {
+        return dashboardService.getPendingItems();
+    }
 
-        List<Pro> pros =
-                proRepository.findByStatusIn(
-                        List.of("PREPARED", "REVIEWED")
-                );
+    @GetMapping("/overview")
+    public DashboardOverview overview() {
+        return dashboardService.getOverview();
+    }
 
-        return pros.stream().map(p -> {
+    @GetMapping("/recent")
+    public List<DocumentSummary> recent() {
+        return dashboardService.getRecent();
+    }
 
-            Map<String, Object> map =
-                    new HashMap<>();
+    @GetMapping("/my-responsibilities/{role}")
+    public MyResponsibilities getResponsibilities(
+            @PathVariable String role
+    ) {
 
-            map.put("code", p.getCode());
-            map.put("title", p.getTitle());
-            map.put("status", p.getStatus());
+        BusinessRole businessRole =
+                Arrays.stream(BusinessRole.values())
+                        .filter(r ->
+                                r.name().equalsIgnoreCase(role) ||
+                                        r.getLabel().equalsIgnoreCase(role))
+                        .findFirst()
+                        .orElseThrow();
 
-            return map;
-
-        }).toList();
+        return dashboardService.getResponsibilities(
+                businessRole
+        );
     }
 
 

@@ -6,8 +6,6 @@ import java.util.List;
 
 public interface DocService {
 
-
-
     Docs create(Docs doc);
 
     Docs update(Long id, Docs doc);
@@ -20,5 +18,6 @@ public interface DocService {
 
     byte[] generateDocsPdf(String code) throws Exception;
 
-
+    Docs action(Long id, String action, Long userId);
+    
 }

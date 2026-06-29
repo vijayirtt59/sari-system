@@ -1,20 +1,42 @@
 package com.sari.system.domain;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+@Getter
 public enum BusinessRole {
 
 
-    COORDINADOR_SARI,
+    COORDINADOR_SARI(
+            "Coordinador del SARI"
+    ),
 
-    RESPONSABLE_VENTAS_COMPRAS,
+    RESPONSABLE_VENTAS_COMPRAS(
+            "Responsable de Ventas y Compras"
+    ),
 
-    AGENTES_VENTAS,
+    AGENTES_VENTAS(
+            "Agentes de Ventas"
+    ),
 
-    COORDINADOR_SISTEMA_SARI,
+    COORDINADOR_SISTEMA_SARI(
+            "Coordinador de Sistema SARI"
+    ),
 
-    DIRECCION_GENERAL,
+    DIRECCION_GENERAL(
+            "Dirección General"
+    ),
 
-    LOGISTICA,
+    LOGISTICA(
+            "Logística"
+    ),
 
-    PRODUCCION
+    PRODUCCION(
+            "Producción"
+    );
+
+    private final String label;
+
 
 }

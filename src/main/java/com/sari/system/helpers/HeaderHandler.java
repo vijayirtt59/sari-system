@@ -20,6 +20,8 @@ import com.itextpdf.layout.properties.VerticalAlignment;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 
 public class HeaderHandler implements IEventHandler {
@@ -357,6 +359,26 @@ public class HeaderHandler implements IEventHandler {
         }
 
         return date.toString();
+    }
+
+    private String formatDocumentDate(LocalDate date) {
+
+        if (date == null) {
+            return "";
+        }
+
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern(
+                        "dd MMMM yyyy",
+                        new Locale("es", "MX")
+                );
+
+        String formatted = date.format(formatter);
+
+        return formatted.substring(0, 3)
+                + Character.toUpperCase(
+                formatted.charAt(3))
+                + formatted.substring(4);
     }
 
 }

@@ -1,16 +1,24 @@
 package com.sari.system.application;
 
 import com.sari.system.audit.AuditLog;
-import com.sari.system.domain.*;
+import com.sari.system.domain.BusinessRole;
+import com.sari.system.domain.Pro;
+import com.sari.system.domain.ProChange;
+import com.sari.system.domain.ProPdfVersion;
+import com.sari.system.domain.RegistroItem;
+import com.sari.system.domain.SystemRole;
+import com.sari.system.domain.User;
 import com.sari.system.dto.ProRequest;
 import com.sari.system.infrastructure.AuditLogRepository;
 import com.sari.system.infrastructure.ProPdfVersionRepository;
 import com.sari.system.infrastructure.ProRepository;
+import com.sari.system.infrastructure.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,11 +26,11 @@ import java.util.List;
 public class ProService {
 
 
-
     private final ProRepository proRepository;
     private final PdfService pdfService;
     private final ProPdfVersionRepository proPdfVersionRepository;
     private final AuditLogRepository auditLogRepository;
+    private final UserRepository userRepository;
 
 
     // ✅ CREATE
@@ -41,7 +49,35 @@ public class ProService {
                 req.getUpdatedBy()
         );
 
+        boolean workflowProvided =
+                hasText(req.getPreparedBy())
+                        && hasText(req.getReviewedBy())
+                        && hasText(req.getApprovedBy());
+
+        if (workflowProvided) {
+
+            p.setPreparedBy(req.getPreparedBy());
+            p.setReviewedBy(req.getReviewedBy());
+            p.setApprovedBy(req.getApprovedBy());
+
+            p.setPreparedDate(req.getPreparedDate());
+            p.setReviewedDate(req.getReviewedDate());
+            p.setApprovedDate(req.getApprovedDate());
+
+            p.setStatus("APPROVED");
+
+        } else {
+
+            p.setStatus("DRAFT");
+        }
+
         return saved;
+    }
+
+    private boolean hasText(String value) {
+
+        return value != null
+                && !value.isBlank();
     }
 
     // ✅ UPDATE
@@ -51,6 +87,10 @@ public class ProService {
                 .orElseThrow(() ->
                         new RuntimeException("Not found"));
         p.getRegistros().clear();
+
+        if (p.getChanges() != null) {
+            p.getChanges().clear();
+        }
 
         map(p, req);
 
@@ -67,8 +107,6 @@ public class ProService {
     }
 
     public Pro updateByCode(String code, ProRequest req) {
-
-        System.out.println("UPDATE CODE = " + code);
 
         Pro p = proRepository.findByCode(code.trim())
                 .orElseThrow(() ->
@@ -125,9 +163,36 @@ public class ProService {
                         .toList()
         );
 
+        if (req.getChangeDescription() != null
+                && !req.getChangeDescription().isBlank()) {
+
+            if (p.getChanges() == null) {
+                p.setChanges(new ArrayList<>());
+            }
+
+            int nextVersion =
+                    p.getChanges()
+                            .stream()
+                            .mapToInt(ProChange::getVersion)
+                            .max()
+                            .orElse(0) + 1;
+
+            ProChange change = new ProChange();
+
+            change.setVersion(nextVersion);
+            change.setDescription(req.getChangeDescription());
+            change.setChangeDate(LocalDate.now());
+
+            p.getChanges().add(change);
+        }
+
 
         // ✅ reset workflow after edit
         p.setStatus("PREPARED");
+
+        p.setPreparedBy(req.getUpdatedBy());
+        p.setPreparedDate(LocalDate.now());
+
 
         p.setReviewedBy(null);
         p.setReviewedDate(null);
@@ -197,6 +262,43 @@ public class ProService {
                 req.getDocumentDate()
         );
 
+        p.setPreparedBy(req.getPreparedBy());
+        p.setReviewedBy(req.getReviewedBy());
+        p.setApprovedBy(req.getApprovedBy());
+
+        p.setPreparedDate(req.getPreparedDate());
+        p.setReviewedDate(req.getReviewedDate());
+        p.setApprovedDate(req.getApprovedDate());
+
+        p.setChanges(
+
+                req.getChanges() == null
+                        ? new ArrayList<>()
+                        : req.getChanges()
+                        .stream()
+                        .map(c -> {
+
+                            ProChange item =
+                                    new ProChange();
+
+                            item.setVersion(
+                                    c.getVersion()
+                            );
+
+                            item.setDescription(
+                                    c.getDescription()
+                            );
+
+                            item.setChangeDate(
+                                    c.getChangeDate()
+                            );
+
+                            return item;
+
+                        })
+                        .toList()
+        );
+
     }
 
 
@@ -255,6 +357,43 @@ public class ProService {
                         .toList()
         );
 
+        p.setPreparedBy(request.getPreparedBy());
+        p.setReviewedBy(request.getReviewedBy());
+        p.setApprovedBy(request.getApprovedBy());
+
+        p.setPreparedDate(request.getPreparedDate());
+        p.setReviewedDate(request.getReviewedDate());
+        p.setApprovedDate(request.getApprovedDate());
+
+        p.setChanges(
+
+                request.getChanges() == null
+                        ? new ArrayList<>()
+                        : request.getChanges()
+                        .stream()
+                        .map(c -> {
+
+                            ProChange item =
+                                    new ProChange();
+
+                            item.setVersion(
+                                    c.getVersion()
+                            );
+
+                            item.setDescription(
+                                    c.getDescription()
+                            );
+
+                            item.setChangeDate(
+                                    c.getChangeDate()
+                            );
+
+                            return item;
+
+                        })
+                        .toList()
+        );
+
         return pdfService.buildHtml(p);
     }
 
@@ -264,9 +403,9 @@ public class ProService {
         Pro p = proRepository.findByCode(code)
                 .orElseThrow(() -> new RuntimeException("PRO not found"));
 
-        if (!"APPROVED".equals(p.getStatus())) {
-            throw new RuntimeException("Document not approved");
-        }
+        //if (!"APPROVED".equals(p.getStatus())) {
+        //  throw new RuntimeException("Document not approved");
+        //}
         int version = proPdfVersionRepository.findMaxVersion(code).orElse(0) + 1;
 
 
@@ -282,7 +421,12 @@ public class ProService {
         return pdfService.generatePro(p);
     }
 
-    public Pro applyAction(String code, String action, String user) {
+    public Pro applyAction(String code, String action, Long userId) {
+
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow();
 
         Pro p = proRepository.findByCode(code)
                 .orElseThrow(() -> new RuntimeException("Not found"));
@@ -290,47 +434,119 @@ public class ProService {
 
         switch (action) {
 
-            case "PREPARE":
-                if (!p.getStatus().equals("DRAFT"))
-                    throw new RuntimeException("Invalid state");
+            case "PREPARE" -> {
 
-                p.setStatus("PREPARED");
-                p.setPreparedBy(user);
-                p.setPreparedDate(LocalDate.now());
+                requireRole(
+                        user,
+                        SystemRole.PREPARER
+                );
+
+                if (!"DRAFT".equals(
+                        p.getStatus()
+                )) {
+
+                    throw new RuntimeException(
+                            "Procedure already prepared."
+                    );
+                }
+
+                p.setPreparedBy(
+                        user.getWorkflowName()
+                );
+
+                p.setPreparedDate(
+                        LocalDate.now()
+                );
+
+                p.setStatus(
+                        "PREPARED"
+                );
+
                 log(
                         "PREPARED",
                         p.getCode(),
-                        user
+                        user.getWorkflowName()
                 );
-                break;
+            }
+            case "REVIEW" -> {
 
-            case "REVIEW":
-                if (!p.getStatus().equals("PREPARED"))
-                    throw new RuntimeException("Invalid state");
+                requireRole(
+                        user,
+                        SystemRole.REVIEWER
+                );
 
-                p.setStatus("REVIEWED");
-                p.setReviewedBy(user);
-                p.setReviewedDate(LocalDate.now());
+                if (!"PREPARED".equals(
+                        p.getStatus()
+                )) {
+
+                    throw new RuntimeException(
+                            "Procedure must be prepared first."
+                    );
+                }
+
+                validateReview(
+                        user,
+                        p
+                );
+
+                p.setReviewedBy(
+                        user.getWorkflowName()
+                );
+
+                p.setReviewedDate(
+                        LocalDate.now()
+                );
+
+                p.setStatus(
+                        "REVIEWED"
+                );
+
                 log(
                         "REVIEWED",
                         p.getCode(),
-                        user
+                        user.getWorkflowName()
                 );
-                break;
+            }
 
-            case "APPROVE":
-                if (!p.getStatus().equals("REVIEWED"))
-                    throw new RuntimeException("Invalid state");
+            case "APPROVE" -> {
 
-                p.setStatus("APPROVED");
-                p.setApprovedBy(user);
-                p.setApprovedDate(LocalDate.now());
+                requireRole(
+                        user,
+                        SystemRole.APPROVER
+                );
+
+                if (!"REVIEWED".equals(
+                        p.getStatus()
+                )) {
+
+                    throw new RuntimeException(
+                            "Procedure must be reviewed first."
+                    );
+                }
+
+                validateApprove(
+                        user,
+                        p
+                );
+
+                p.setApprovedBy(
+                        user.getWorkflowName()
+                );
+
+                p.setApprovedDate(
+                        LocalDate.now()
+                );
+
+                p.setStatus(
+                        "APPROVED"
+                );
+
                 log(
                         "APPROVED",
                         p.getCode(),
-                        user
+                        user.getWorkflowName()
                 );
-                break;
+            }
         }
 
         return proRepository.save(p);
@@ -351,6 +567,74 @@ public class ProService {
                         .createdAt(LocalDateTime.now())
                         .build()
         );
+    }
+
+    public List<Pro> findByRole(
+            BusinessRole role
+    ) {
+
+        return proRepository
+                .findByResponsableRole(role);
+
+    }
+
+    private void requireRole(
+            User user,
+            SystemRole role
+    ) {
+
+        if (!user.getSystemRoles()
+                .contains(role)) {
+
+            throw new RuntimeException(
+                    "User lacks role: " + role
+            );
+        }
+    }
+
+    private void validateReview(
+            User user,
+            Pro pro
+    ) {
+
+        String currentUser =
+                user.getWorkflowName();
+
+        if (currentUser.equals(
+                pro.getPreparedBy()
+        )) {
+
+            throw new RuntimeException(
+                    "You cannot review your own procedure."
+            );
+        }
+    }
+
+    private void validateApprove(
+            User user,
+            Pro pro
+    ) {
+
+        String currentUser =
+                user.getWorkflowName();
+
+        if (currentUser.equals(
+                pro.getPreparedBy()
+        )) {
+
+            throw new RuntimeException(
+                    "You cannot approve your own procedure."
+            );
+        }
+
+        if (currentUser.equals(
+                pro.getReviewedBy()
+        )) {
+
+            throw new RuntimeException(
+                    "Reviewer cannot approve the same procedure."
+            );
+        }
     }
 
 }

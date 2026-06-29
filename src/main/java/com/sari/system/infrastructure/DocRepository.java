@@ -10,5 +10,6 @@ public interface DocRepository extends JpaRepository<Docs, Long> {
 
     Optional<Docs> findByCode(String code);
     List<Docs> findAllByOrderByCodeAsc();
+    long countByStatus(String status);
 
 }

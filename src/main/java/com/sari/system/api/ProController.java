@@ -1,12 +1,14 @@
 package com.sari.system.api;
 
 import com.sari.system.application.ProService;
+import com.sari.system.domain.BusinessRole;
 import com.sari.system.domain.Pro;
 import com.sari.system.dto.ProRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -68,9 +70,31 @@ public class ProController {
     @PostMapping("/{code}/action")
     public Pro action(@PathVariable String code,
                       @RequestParam String action,
-                      @RequestParam String user) {
+                      @RequestParam Long userId) {
 
-        return proService.applyAction(code, action, user);
+        return proService.applyAction(code, action, userId);
+    }
+
+    @GetMapping("/by-role/{role}")
+    public List<Pro> getByRole(
+            @PathVariable String role
+    ) {
+
+        BusinessRole businessRole =
+                Arrays.stream(
+                                BusinessRole.values()
+                        )
+                        .filter(r ->
+                                r.name().equalsIgnoreCase(role)
+                                        || r.getLabel()
+                                        .equalsIgnoreCase(role)
+                        )
+                        .findFirst()
+                        .orElseThrow();
+
+        return proService.findByRole(
+                businessRole
+        );
     }
 
 

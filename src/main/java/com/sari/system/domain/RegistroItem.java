@@ -1,13 +1,19 @@
 package com.sari.system.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -28,8 +34,5 @@ public class RegistroItem {
 
     @Enumerated(EnumType.STRING)
     private BusinessRole responsableResguardo;
-
-    @ManyToOne
-    private Pro pro;
 
 }

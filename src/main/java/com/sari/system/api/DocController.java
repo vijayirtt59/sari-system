@@ -59,4 +59,17 @@ public class DocController {
                 .body(pdf);
     }
 
+    @PostMapping("/{id}/action")
+    public Docs action(
+            @PathVariable Long id,
+            @RequestParam String action,
+            @RequestParam Long userId
+    ) {
+        return service.action(
+                id,
+                action,
+                userId
+        );
+    }
+
 }

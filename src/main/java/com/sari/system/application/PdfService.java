@@ -5,6 +5,8 @@ import com.itextpdf.html2pdf.HtmlConverter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.sari.system.domain.ProChange;
+import com.sari.system.domain.RegistroItem;
 import com.sari.system.domain.Section;
 import com.sari.system.domain.FormTemplate;
 import com.sari.system.domain.Pro;
@@ -28,8 +30,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -150,8 +154,31 @@ public class PdfService {
                     padding: 5px;
                     text-align: center;
                 }
-
-
+                                
+                .registros-table {
+                     width: 100%%;
+                     border-collapse: collapse;
+                     margin-top: 10px;
+                 }
+                 
+                 .registros-table th {
+                     background-color: #d9d9d9;
+                     border: 1px solid black;
+                     padding: 5px;
+                     text-align: center;
+                     font-weight: bold;
+                 }
+                 
+                 .registros-table td {
+                     border: 1px solid black;
+                     padding: 5px;
+                     vertical-align: top;
+                 }
+                 
+                 .registros-table .codigo {
+                     white-space: nowrap;
+                 }
+                
                 .section-title {
                     font-weight: bold;
                     margin-top: 20px;
@@ -263,6 +290,10 @@ public class PdfService {
                                 
                     padding: 0;
                 }
+                                
+                .page-break {
+                    page-break-before: always;
+                }
                   
                                 
                 </style>
@@ -271,44 +302,65 @@ public class PdfService {
                 <body>
 
                 <!-- ✅ SIGNATURE TABLE -->
-                <table class="signature-table">
-                <tr>
-                    <th>ELABORADO POR</th>
-                    <th>REVISADO POR</th>
-                    <th>APROBADO POR</th>
-                </tr>
-                <tr>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                </tr>
-                <tr>
-                    <td>Nombre y firma</td>
-                    <td>Nombre y firma</td>
-                    <td>Nombre y firma</td>
-                </tr>
-                <tr>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                </tr>
-                </table>
+                <h3>INFORMACIÓN DE FLUJO DE APROBACIÓN</h3>
+                        
+                        <table class="signature-table">
+                        
+                        <tr>
+                            <th>ELABORADO POR</th>
+                            <th>REVISADO POR</th>
+                            <th>APROBADO POR</th>
+                        </tr>
+                        
+                        <tr>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                        </tr>
+                        
+                        <tr>
+                            <td style="height:70px;"></td>
+                            <td style="height:70px;"></td>
+                            <td style="height:70px;"></td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Firma</td>
+                            <td>Firma</td>
+                            <td>Firma</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Fecha</td>
+                            <td>Fecha</td>
+                            <td>Fecha</td>
+                        </tr>
+                        
+                        </table>
 
                 <!-- ✅ CHANGE TABLE -->
-                <table class="change-table">
-                <tr>
-                    <th>CAMBIO</th>
-                    <th>VERSION</th>
-                    <th>FECHA</th>
-                </tr>
-                <tr>
-                    <td>Emisión inicial</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                </tr>
-                </table>
+                <h3>CONTROL DE CAMBIOS</h3>
+                        
+                        <table class="change-table">
+                        
+                        <tr>
+                            <th>VERSIÓN</th>
+                            <th>DESCRIPCIÓN</th>
+                            <th>FECHA</th>
+                        </tr>
+                        
+                        %s
+                        
+                        </table>
+                        
+                        <div class="page-break"></div>
 
-                <!-- ✅ PAGE 2 CONTENT -->
 
                 <div class="section-title">I. OBJETIVO</div>
                 <div class="section-content">%s</div>
@@ -338,14 +390,13 @@ public class PdfService {
 
 
                 // CHANGE TABLE DATA
-                v.getVersion(),
-                today,
+                buildChangeHistory(v),
 
                 // CONTENT (PAGE 2)
                 normalizeTables(safe(v.getObjetivo())),
                 normalizeTables(safe(v.getAlcance())),
-                buildProcedimiento(v),
-                normalizeTables(safe(v.getRegistros()))
+                cleanWordHtml(buildProcedimiento(v)),
+                buildRegistrosTable(v)
         );
     }
 
@@ -357,6 +408,41 @@ public class PdfService {
 
     private String safeDate(LocalDate d) {
         return d == null ? "" : d.toString();
+    }
+
+    private String buildChangeHistory(Pro p) {
+
+        if (p.getChanges() == null ||
+                p.getChanges().isEmpty()) {
+
+            return """
+            <tr>
+                <td>0</td>
+                <td>Emisión inicial</td>
+                <td>-</td>
+            </tr>
+        """;
+        }
+
+        return p.getChanges()
+                .stream()
+                .sorted(
+                        Comparator.comparingInt(
+                                ProChange::getVersion
+                        )
+                )
+                .map(c -> """
+                    <tr>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                    </tr>
+                    """.formatted(
+                        c.getVersion(),
+                        safe(c.getDescription()),
+                        safeDate(c.getChangeDate())
+                ))
+                .collect(Collectors.joining());
     }
 
 
@@ -430,57 +516,6 @@ public class PdfService {
 
         String html = normalizeTables(
                 safe(p.getProcedimiento())
-        );
-
-        html = html.replace(
-                "[[FIRMAS]]",
-                """
-                <div style='text-align:center;margin-top:10px;margin-bottom:10px;'>
-        
-                    <img
-                        src='%s/uploads/templates/firmas.png'
-                        style='
-                            width:50%;
-                            border:1px solid #999;
-                        '
-                    />
-        
-                </div>
-                """.formatted(baseUrl)
-        );
-
-        html = html.replace(
-                "[[CONTROL_CAMBIOS]]",
-                """
-                <div style='text-align:center;margin-top:10px;margin-bottom:10px;'>
-        
-                    <img
-                        src='%s/uploads/templates/control-cambios.png'
-                        style='
-                            width:50%;
-                            border:1px solid #999;
-                        '
-                    />
-        
-                </div>
-                """.formatted(baseUrl)
-        );
-
-        html = html.replace(
-                "[[REGISTROS]]",
-                """
-                <div style='text-align:center;margin-top:10px;margin-bottom:10px;'>
-        
-                    <img
-                        src='%s/uploads/templates/registros.png'
-                        style='
-                            width:50%;
-                            border:1px solid #999;
-                        '
-                    />
-        
-                </div>
-                """.formatted(baseUrl)
         );
 
         // =====================================================
@@ -742,18 +777,6 @@ public class PdfService {
                     vertical-align: top;
                 }
                                 
-                /* HEADER ROW */
-                                
-                .normal-table tr:first-child td,
-                .normal-table tr:first-child th {
-                                
-                    background-color: #d9d9d9;
-                                
-                    text-align: center;
-                                
-                    font-weight: bold;
-                }
-                                
                 /* BORDERLESS TABLES */
                                 
                 .borderless-table {
@@ -901,6 +924,102 @@ public class PdfService {
 
         </table>
         """;
+    }
+
+    private String cleanWordHtml(String html) {
+
+        if (html == null) {
+            return "";
+        }
+
+        html = html.replaceAll(
+                "class=\"Mso[^\"]*\"",
+                ""
+        );
+
+        html = html.replaceAll(
+                "<o:p>.*?</o:p>",
+                ""
+        );
+
+        html = html.replaceAll(
+                "\\s*mso-[^:]+:[^;]+;?",
+                ""
+        );
+
+        html = html.replaceAll(
+                "<span[^>]*>",
+                ""
+        );
+
+        html = html.replaceAll(
+                "</span>",
+                ""
+        );
+
+        return html;
+    }
+
+    private String buildRegistrosTable(Pro p) {
+
+        if (p.getRegistros() == null ||
+                p.getRegistros().isEmpty()) {
+
+            return "<p>No registros definidos.</p>";
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("""
+        <table class="registros-table">
+
+            <thead>
+
+                <tr>
+                    <th rowspan="2">Código</th>
+                    <th rowspan="2">Nombre</th>
+                    <th colspan="3">Retención / Archivo activo</th>
+                </tr>
+
+                <tr>
+                    <th>Almacenamiento</th>
+                    <th>Tiempo de retención y disposición</th>
+                    <th>Responsable de resguardo</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+    """);
+
+        for (RegistroItem r : p.getRegistros()) {
+
+            sb.append("""
+            <tr>
+                <td class="codigo">%s</td>
+                <td>%s</td>
+                <td>%s</td>
+                <td>%s</td>
+                <td>%s</td>
+            </tr>
+        """.formatted(
+                    safe(r.getCodigo()),
+                    safe(r.getNombre()),
+                    safe(r.getAlmacenamiento()),
+                    safe(r.getTiempoRetencion()),
+                    r.getResponsableResguardo() == null
+                            ? ""
+                            : r.getResponsableResguardo().getLabel()
+            ));
+        }
+
+        sb.append("""
+            </tbody>
+
+        </table>
+    """);
+
+        return sb.toString();
     }
 
 }

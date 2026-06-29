@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 
 @RestController
@@ -47,6 +48,8 @@ public class AuthController {
 
                 .email(req.getEmail())
 
+                .professionalTitle(req.getProfessionalTitle())
+
                 .password(
                         passwordEncoder.encode(
                                 req.getPassword()
@@ -54,7 +57,9 @@ public class AuthController {
                 )
 
                 // ✅ default role
-                .systemRole(SystemRole.VIEWER)
+                .systemRoles(
+                        Set.of(SystemRole.VIEWER)
+                )
 
                 .enabled(true)
 
@@ -77,6 +82,10 @@ public class AuthController {
                         )
                 );
 
+        if (!user.isEnabled()) {
+            throw new RuntimeException("User account is disabled.");
+        }
+
         boolean ok =
                 passwordEncoder.matches(
                         req.getPassword(),
@@ -90,48 +99,10 @@ public class AuthController {
             );
         }
 
+
         return user;
     }
 
-    @PutMapping("/{id}/role")
-    public User updateRole(
-            @PathVariable Long id,
-            @RequestParam SystemRole role
-    ) {
 
-        User user = userRepository
-                .findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "User not found"
-                        )
-                );
-
-        user.setSystemRole(role);
-
-        return userRepository.save(user);
-    }
-
-    @GetMapping("/users")
-    public List<User> users() {
-
-        List<User> users = userRepository.findAll();
-        return users;
-    }
-
-    @PutMapping("/users/{id}/business-role")
-    public User updateBusinessRole(
-            @PathVariable Long id,
-            @RequestParam BusinessRole businessRole
-    ) {
-
-        User user = userRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
-
-        user.setBusinessRole(businessRole);
-
-        return userRepository.save(user);
-    }
 
 }

@@ -19,4 +19,15 @@ public class ProRequest {
     private String updatedBy;
     private LocalDate documentDate;
 
+    private String preparedBy;
+    private String reviewedBy;
+    private String approvedBy;
+
+    private LocalDate preparedDate;
+    private LocalDate reviewedDate;
+    private LocalDate approvedDate;
+
+    private List<ProChangeRequest> changes;
+    private String changeDescription;
+
 }

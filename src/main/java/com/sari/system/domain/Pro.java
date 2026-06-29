@@ -52,5 +52,12 @@ public class Pro {
     private String lastModifiedBy;
     private String lastModifiedDate;
 
+    @OneToMany(
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @JoinColumn(name = "pro_id")
+    private List<ProChange> changes;
+
 
 }
