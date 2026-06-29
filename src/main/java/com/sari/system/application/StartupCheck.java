@@ -3,20 +3,35 @@ package com.sari.system.application;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-
 @Component
 public class StartupCheck {
 
     @PostConstruct
-    public void verify() {
+    public void checkLibreOffice() {
 
-        File soffice = new File("/usr/bin/soffice");
+        try {
 
-        System.out.println(
-                "LibreOffice exists = "
-                        + soffice.exists()
-        );
+            Process process =
+                    new ProcessBuilder(
+                            "which",
+                            "soffice"
+                    ).start();
+
+            String output =
+                    new String(
+                            process.getInputStream()
+                                    .readAllBytes()
+                    );
+
+            System.out.println(
+                    "LibreOffice = " + output
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
     }
 }
 
