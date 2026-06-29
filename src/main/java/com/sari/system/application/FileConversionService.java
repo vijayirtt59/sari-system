@@ -1,4 +1,4 @@
-package com.sari.system.helpers;
+package com.sari.system.application;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -7,20 +7,20 @@ import java.io.InputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+@Service
+public class FileConversionService {
+
+    @Value("${libreoffice.path}")
+    private String libreOfficePath;
 
 
-public class FileConversionUtil {
-
-
-
-    // ✅ Update this based on your system (macOS) TODO: Need changes later
-    private static final String SOFFICE_PATH =
-            "/Applications/LibreOffice.app/Contents/MacOS/soffice";
-
-    public static void convertExcelToPdf(String inputPath, String outDir) throws Exception {
+    public void convertExcelToPdf(String inputPath, String outDir) throws Exception {
 
         ProcessBuilder pb = new ProcessBuilder(
-                SOFFICE_PATH,
+                libreOfficePath,
                 "--headless",
                 "--convert-to",
                 "pdf:calc_pdf_Export:{\"ScaleToPagesX\":1}",
@@ -46,7 +46,7 @@ public class FileConversionUtil {
     }
 
     // ✅ Convert PDF → Image (HIGH QUALITY)
-    public static void convertPdfToImage(String pdfPath, String imagePath) throws Exception {
+    public void convertPdfToImage(String pdfPath, String imagePath) throws Exception {
 
         File pdfFile = new File(pdfPath);
 

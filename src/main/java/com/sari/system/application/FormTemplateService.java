@@ -1,7 +1,6 @@
 package com.sari.system.application;
 
 import com.sari.system.domain.FormTemplate;
-import com.sari.system.helpers.FileConversionUtil;
 import com.sari.system.infrastructure.FormTemplateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +14,7 @@ import java.util.List;
 public class FormTemplateService {
 
     private final FormTemplateRepository repo;
+    private final FileConversionService fileConversionService;
 
 
     private final String BASE_PATH =
@@ -43,10 +43,10 @@ public class FormTemplateService {
 
 
         // ✅ convert Excel → PDF
-        FileConversionUtil.convertExcelToPdf(excelPath, BASE_PATH);
+        fileConversionService.convertExcelToPdf(excelPath, BASE_PATH);
 
         // ✅ convert PDF → image
-        FileConversionUtil.convertPdfToImage(pdfPath, imagePath);
+        fileConversionService.convertPdfToImage(pdfPath, imagePath);
 
         // ✅ check existing
         FormTemplate form = repo.findByCode(code)
