@@ -100,10 +100,10 @@ public class PdfService {
 
                 body {
                     font-family: "Times New Roman", serif;
-                    font-size: 11pt;
-                    line-height: 1.6;
+                    font-size: 10pt;
+                    line-height: 1.2;
                     text-align: justify;
-                    padding: 20px;
+                    padding: 0;
                     color: black;
                 }
 
@@ -551,22 +551,23 @@ public class PdfService {
             }
 
             String replacement = """
-            <div style='text-align:center;margin-top:20px;margin-bottom:20px;'>
+                    <div style='text-align:center;margin-top:20px;margin-bottom:20px;'>
 
-                <h4>
-                    %s - %s
-                </h4>
+                        <h4>
+                            %s - %s
+                        </h4>
 
-                <img
-                    src='%s%s'
-                    style='
-                        width:50%%;
-                        border:1px solid #999;
-                    '
-                />
+                        <img
+                            src='%s%s'
+                            style='
+                                width:25%%;
+                                max-width:150px;
+                                border:1px solid #999;
+                            '
+                        />
 
-            </div>
-            """.formatted(
+                    </div>
+                    """.formatted(
                     form.getCode(),
                     form.getTitle(),
                     baseUrl,
@@ -674,7 +675,7 @@ public class PdfService {
                 <style>
 
                 @page {
-                    margin: 200px 40px 60px 40px;
+                    margin: 130px 35px 50px 35px;
                 }
 
                 body {
