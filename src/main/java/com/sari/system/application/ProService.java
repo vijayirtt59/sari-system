@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -80,32 +81,6 @@ public class ProService {
                 && !value.isBlank();
     }
 
-    // ✅ UPDATE
-    public Pro update(Long id, ProRequest req) {
-
-        Pro p = proRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Not found"));
-        p.getRegistros().clear();
-
-        if (p.getChanges() != null) {
-            p.getChanges().clear();
-        }
-
-        map(p, req);
-
-        Pro saved =
-                proRepository.save(p);
-
-        log(
-                "UPDATED",
-                saved.getCode(),
-                req.getUpdatedBy()
-        );
-
-        return saved;
-    }
-
     public Pro updateByCode(String code, ProRequest req) {
 
         Pro p = proRepository.findByCode(code.trim())
@@ -125,12 +100,10 @@ public class ProService {
 
         p.getRegistros().clear();
 
-        p.setRegistros(
+        p.getRegistros().addAll(
 
                 req.getRegistros()
-
                         .stream()
-
                         .map(registroItemRequest -> {
 
                             RegistroItem item =
@@ -159,8 +132,7 @@ public class ProService {
                             return item;
 
                         })
-
-                        .toList()
+                        .collect(Collectors.toList())
         );
 
         if (req.getChangeDescription() != null
@@ -255,7 +227,7 @@ public class ProService {
                             return item;
 
                         })
-                        .toList()
+                        .collect(Collectors.toCollection(ArrayList::new))
         );
 
         p.setDocumentDate(
@@ -296,7 +268,7 @@ public class ProService {
                             return item;
 
                         })
-                        .toList()
+                        .collect(Collectors.toCollection(ArrayList::new))
         );
 
     }
@@ -354,7 +326,7 @@ public class ProService {
                             return item;
 
                         })
-                        .toList()
+                        .collect(Collectors.toCollection(ArrayList::new))
         );
 
         p.setPreparedBy(request.getPreparedBy());
@@ -391,7 +363,7 @@ public class ProService {
                             return item;
 
                         })
-                        .toList()
+                        .collect(Collectors.toCollection(ArrayList::new))
         );
 
         return pdfService.buildHtml(p);

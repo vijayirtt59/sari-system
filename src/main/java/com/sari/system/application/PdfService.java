@@ -103,7 +103,7 @@ public class PdfService {
         }
         /* Signature table styles */
         .signature-table {
-            width: 100%%;
+            width: 100%;
             border-collapse: collapse;
             border: 1px solid black;
             margin-top: 10px;
@@ -117,7 +117,7 @@ public class PdfService {
         }
         /* Change log table styles */
         .change-table {
-            width: 100%%;
+            width: 100%;
             border-collapse: collapse;
             border: 1px solid black;
             margin-top: 10px;
@@ -129,7 +129,7 @@ public class PdfService {
         }
         /* REGISTROS table styles */
         .registros-table {
-            width: 100%%;
+            width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
         }
@@ -159,7 +159,7 @@ public class PdfService {
         }
         /* Tables */
         .normal-table {
-            width: 100%%;
+            width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
             margin-bottom: 10px;
@@ -178,7 +178,7 @@ public class PdfService {
         }
         /* Borderless tables */
         .borderless-table {
-            width: 100%%;
+            width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
             margin-bottom: 10px;
@@ -194,7 +194,7 @@ public class PdfService {
             overflow-wrap: break-word;
             text-align: left;
         }
-        .borderless-table td.label {
+        .borderless-table td:first-child {
             width: 180px;
             font-weight: bold;
         }
@@ -345,17 +345,11 @@ public class PdfService {
 
     private String normalizeTables(String html) {
 
-
-
         if (html == null || html.isBlank()) {
             return "";
         }
 
         Document doc = Jsoup.parseBodyFragment(html);
-
-        doc.select("[style]").forEach(
-                e -> e.removeAttr("style")
-        );
 
         Elements tables = doc.select("table");
 
@@ -372,8 +366,8 @@ public class PdfService {
             // ✅ CONVERT SINGLE-CELL ROWS INTO HEADER ROWS
 
             for (Element row : rows) {
+
                 Elements cols = row.select("td");
-                if (cols.size() == 2) {cols.get(0).addClass("label");}
 
                 if (cols.size() == 1) {
 
@@ -640,7 +634,7 @@ public class PdfService {
                     margin-left: 10px;
                 }
                 .signature-table {
-                    width: 100%%;
+                    width: 100%;
                     border-collapse: collapse;
                     border: 1px solid black;
                     margin-top: 10px;
@@ -662,7 +656,7 @@ public class PdfService {
                                 
                 .normal-table {
                                 
-                    width: 100%%;
+                    width: 100%;
                                 
                     border-collapse: collapse;
                                 
@@ -685,7 +679,7 @@ public class PdfService {
                                 
                 .borderless-table {
                                 
-                    width: 100%%;
+                    width: 100%;
                                 
                     border-collapse: collapse;
                                 
