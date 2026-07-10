@@ -194,7 +194,7 @@ public class PdfService {
             overflow-wrap: break-word;
             text-align: left;
         }
-        .borderless-table td:first-child {
+        .borderless-table td.label {
             width: 180px;
             font-weight: bold;
         }
@@ -345,11 +345,17 @@ public class PdfService {
 
     private String normalizeTables(String html) {
 
+
+
         if (html == null || html.isBlank()) {
             return "";
         }
 
         Document doc = Jsoup.parseBodyFragment(html);
+
+        doc.select("[style]").forEach(
+                e -> e.removeAttr("style")
+        );
 
         Elements tables = doc.select("table");
 
@@ -368,6 +374,7 @@ public class PdfService {
             for (Element row : rows) {
 
                 Elements cols = row.select("td");
+                if (cols.size() == 2) {cols.get(0).addClass("label");}
 
                 if (cols.size() == 1) {
 
