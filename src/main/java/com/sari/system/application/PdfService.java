@@ -372,7 +372,6 @@ public class PdfService {
             // ✅ CONVERT SINGLE-CELL ROWS INTO HEADER ROWS
 
             for (Element row : rows) {
-
                 Elements cols = row.select("td");
                 if (cols.size() == 2) {cols.get(0).addClass("label");}
 
