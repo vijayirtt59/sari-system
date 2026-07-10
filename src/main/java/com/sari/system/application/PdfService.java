@@ -88,315 +88,212 @@ public class PdfService {
 
         String today = java.time.LocalDate.now().toString();
 
-        return """
-                <html>
-                <head>
-                <style>
-                                
-                @page {
-                    margin: 180px 40px 60px 40px;
-                }
-                                
+        String styles = """
+        <style>
+        @page {
+            margin: 180px 40px 60px 40px;
+        }
+        body {
+            font-family: "Times New Roman", serif;
+            font-size: 10pt;
+            line-height: 1.2;
+            text-align: justify;
+            padding: 0;
+            color: black;
+        }
+        /* Signature table styles */
+        .signature-table {
+            width: 100%%;
+            border-collapse: collapse;
+            border: 1px solid black;
+            margin-top: 10px;
+        }
+        .signature-table th,
+        .signature-table td {
+            border: 1px solid black;
+            text-align: center;
+            padding: 5px;
+            vertical-align: middle;
+        }
+        /* Change log table styles */
+        .change-table {
+            width: 100%%;
+            border-collapse: collapse;
+            border: 1px solid black;
+            margin-top: 10px;
+        }
+        .change-table td, .change-table th {
+            border: 1px solid black;
+            padding: 5px;
+            text-align: center;
+        }
+        /* REGISTROS table styles */
+        .registros-table {
+            width: 100%%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .registros-table th {
+            background-color: #d9d9d9;
+            border: 1px solid black;
+            padding: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .registros-table td {
+            border: 1px solid black;
+            padding: 5px;
+            vertical-align: top;
+        }
+        /* Section titles */
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-decoration: underline;
+            font-size: 16px;
+        }
+        /* Content paragraphs */
+        .section-content {
+            margin-top: 5px;
+        }
+        /* Tables */
+        .normal-table {
+            width: 100%%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        .normal-table td,
+        .normal-table th {
+            border: 1px solid black;
+            padding: 6px;
+            vertical-align: top;
+        }
+        .normal-table tr:first-child td,
+        .normal-table tr:first-child th {
+            background-color: #d9d9d9;
+            text-align: center;
+            font-weight: bold;
+        }
+        /* Borderless tables */
+        .borderless-table {
+            width: 100%%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            table-layout: fixed;
+            text-align: left;
+        }
+        .borderless-table td,
+        .borderless-table th {
+            border: none !important;
+            padding: 4px 6px;
+            vertical-align: top;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            text-align: left;
+        }
+        .borderless-table td:first-child {
+            width: 180px;
+            font-weight: bold;
+        }
+        /* Signature table styles */
+        figure.table {
+            margin: 0;
+            padding: 0;
+        }
+        /* Page break */
+        .page-break {
+            page-break-before: always;
+        }
+        </style>
+        """;
 
-                body {
-                    font-family: "Times New Roman", serif;
-                    font-size: 10pt;
-                    line-height: 1.2;
-                    text-align: justify;
-                    padding: 0;
-                    color: black;
-                }
+        String htmlContent = """
+    <html>
+    <head>
+    %s
+    </head>
+    <body>
+    <!-- Signature Section -->
+    <h3>INFORMACIÓN DE FLUJO DE APROBACIÓN</h3>
+    <table class="signature-table">
+        <tr>
+            <th>ELABORADO POR</th>
+            <th>REVISADO POR</th>
+            <th>APROBADO POR</th>
+        </tr>
+        <tr>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+        </tr>
+        <tr>
+            <td style="height:70px;"></td>
+            <td style="height:70px;"></td>
+            <td style="height:70px;"></td>
+        </tr>
+        <tr>
+            <td>Firma</td>
+            <td>Firma</td>
+            <td>Firma</td>
+        </tr>
+        <tr>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+        </tr>
+        <tr>
+            <td>Fecha</td>
+            <td>Fecha</td>
+            <td>Fecha</td>
+        </tr>
+    </table>
 
-                .header-table {
-                    width: 100%%;
-                    border-collapse: collapse;
-                    border: 1px solid black;
-                }
+    <!-- Change Log -->
+    <h3>CONTROL DE CAMBIOS</h3>
+    <table class="change-table">
+        <tr>
+            <th>VERSIÓN</th>
+            <th>DESCRIPCIÓN</th>
+            <th>FECHA</th>
+        </tr>
+        %s
+    </table>
+    <div class="page-break"></div>
 
-                .header-table td {
-                    border: 1px solid black;
-                    padding: 5px;
-                }
+    <!-- Sections -->
+    <div class="section-title">I. OBJETIVO</div>
+    <div class="section-content">%s</div>
 
-                .inner-table {
-                    width: 100%%;
-                    border-collapse: collapse;
-                }
+    <div class="section-title">II. ALCANCE</div>
+    <div class="section-content">%s</div>
 
-                .inner-table td {
-                    border: 1px solid black;
-                    padding: 4px;
-                }
+    <div class="section-title">III. PROCEDIMIENTO</div>
+    %s
 
-                .signature-table {
-                    width: 100%%;
-                    border-collapse: collapse;
-                    border: 1px solid black;
-                    margin-top: 10px;
-                }
+    <div class="section-title">IV. REGISTROS</div>
+    <div class="section-content">%s</div>
 
-                .signature-table th, .signature-table td {
-                    border: 1px solid black;
-                    text-align: center;
-                    padding: 5px;
-                }
+    </body>
+    </html>
+    """;
 
-                /* ✅ CHANGE TABLE */
-                .change-table {
-                    width: 100%%;
-                    border-collapse: collapse;
-                    border: 1px solid black;
-                    margin-top: 10px;
-                }
-
-                .change-table td, .change-table th {
-                    border: 1px solid black;
-                    padding: 5px;
-                    text-align: center;
-                }
-                                
-                .registros-table {
-                     width: 100%%;
-                     border-collapse: collapse;
-                     margin-top: 10px;
-                 }
-                 
-                 .registros-table th {
-                     background-color: #d9d9d9;
-                     border: 1px solid black;
-                     padding: 5px;
-                     text-align: center;
-                     font-weight: bold;
-                 }
-                 
-                 .registros-table td {
-                     border: 1px solid black;
-                     padding: 5px;
-                     vertical-align: top;
-                 }
-                 
-                 .registros-table .codigo {
-                     white-space: nowrap;
-                 }
-                
-                .section-title {
-                    font-weight: bold;
-                    margin-top: 20px;
-                    margin-bottom: 10px;
-                    text-decoration: underline;
-                    font-size: 16px;
-                }
-
-                .section-content {
-                    margin-top: 5px;
-                }
-
-                .center {
-                    text-align: center;
-                    font-weight: bold;
-                }
-
-                /* NORMAL TABLES */
-                                
-                .normal-table {
-                                
-                    width: 100%%;
-                                
-                    border-collapse: collapse;
-                                
-                    margin-top: 10px;
-                                
-                    margin-bottom: 10px;
-                }
-                                
-                .normal-table td,
-                .normal-table th {
-                                
-                    border: 1px solid black;
-                                
-                    padding: 6px;
-                                
-                    vertical-align: top;
-                }
-                                
-                /* HEADER */
-                                
-                .normal-table tr:first-child td,
-                .normal-table tr:first-child th {
-                                
-                    background-color: #d9d9d9;
-                                
-                    text-align: center;
-                                
-                    font-weight: bold;
-                }
-                                
-                                
-                .normal-table th {
-                                
-                    background-color: #d9d9d9;
-                                
-                    text-align: center;
-                                
-                    font-weight: bold;
-                }
-                                
-                                
-                /* BORDERLESS TABLES */
-                                
-                .borderless-table {
-                                
-                    width: 100%%;
-                                
-                    border-collapse: collapse;
-                                
-                    margin-top: 10px;
-                                
-                    margin-bottom: 10px;
-                                
-                    table-layout: fixed;
-                                
-                    text-align: left;
-                }
-                                
-                .borderless-table td,
-                .borderless-table th {
-                                
-                    border: none !important;
-                                
-                    padding: 4px 6px;
-                                
-                    vertical-align: top;
-                                
-                    word-break: break-word;
-                                
-                    overflow-wrap: break-word;
-                                
-                    text-align: left;
-                }
-                                
-                .borderless-table td:first-child {
-                                
-                    width: 180px;
-                                
-                    font-weight: bold;
-                }
-                                
-                /* CKEDITOR TABLE WRAPPER */
-                                
-                figure.table {
-                                
-                    margin: 0;
-                                
-                    padding: 0;
-                }
-                                
-                .page-break {
-                    page-break-before: always;
-                }
-                  
-                                
-                </style>
-                </head>
-
-                <body>
-
-                <!-- ✅ SIGNATURE TABLE -->
-                <h3>INFORMACIÓN DE FLUJO DE APROBACIÓN</h3>
-                        
-                        <table class="signature-table">
-                        
-                        <tr>
-                            <th>ELABORADO POR</th>
-                            <th>REVISADO POR</th>
-                            <th>APROBADO POR</th>
-                        </tr>
-                        
-                        <tr>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                        </tr>
-                        
-                        <tr>
-                            <td style="height:70px;"></td>
-                            <td style="height:70px;"></td>
-                            <td style="height:70px;"></td>
-                        </tr>
-                        
-                        <tr>
-                            <td>Firma</td>
-                            <td>Firma</td>
-                            <td>Firma</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>Fecha</td>
-                            <td>Fecha</td>
-                            <td>Fecha</td>
-                        </tr>
-                        
-                        </table>
-
-                <!-- ✅ CHANGE TABLE -->
-                <h3>CONTROL DE CAMBIOS</h3>
-                        
-                        <table class="change-table">
-                        
-                        <tr>
-                            <th>VERSIÓN</th>
-                            <th>DESCRIPCIÓN</th>
-                            <th>FECHA</th>
-                        </tr>
-                        
-                        %s
-                        
-                        </table>
-                        
-                        <div class="page-break"></div>
-
-
-                <div class="section-title">I. OBJETIVO</div>
-                <div class="section-content">%s</div>
-
-                <div class="section-title">II. ALCANCE</div>
-                <div class="section-content">%s</div>
-
-                <div class="section-title">III. PROCEDIMIENTO</div>
-                %s
-
-                <div class="section-title">IV. REGISTROS</div>
-                <div class="section-content">%s</div>
-
-                </body>
-                </html>
-                """.formatted(
-
-
-                // SIGNATURE
-                safe(v.getPreparedBy()),
-                safe(v.getReviewedBy()),
-                safe(v.getApprovedBy()),
-
-                safeDate(v.getPreparedDate()),
-                safeDate(v.getReviewedDate()),
-                safeDate(v.getApprovedDate()),
-
-
-                // CHANGE TABLE DATA
-                buildChangeHistory(v),
-
-                // CONTENT (PAGE 2)
-                normalizeTables(safe(v.getObjetivo())),
-                normalizeTables(safe(v.getAlcance())),
-                cleanWordHtml(buildProcedimiento(v)),
-                buildRegistrosTable(v)
+        return String.format(
+                htmlContent,
+                styles,
+                safe(v.getPreparedBy()), // Prepared By
+                safe(v.getReviewedBy()), // Reviewed By
+                safe(v.getApprovedBy()), // Approved By
+                safeDate(v.getPreparedDate()), // Prepared Date
+                safeDate(v.getReviewedDate()), // Reviewed Date
+                safeDate(v.getApprovedDate()), // Approved Date
+                buildChangeHistory(v), // Change Log HTML
+                normalizeTables(safe(v.getObjetivo())), // Objetivo
+                normalizeTables(safe(v.getAlcance())), // Alcance
+                buildProcedimiento(v), // Procedimiento
+                buildRegistrosTable(v) // Registros table
         );
     }
 
