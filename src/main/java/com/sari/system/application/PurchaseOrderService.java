@@ -41,21 +41,26 @@ public class PurchaseOrderService {
         if (req.getPoNumber() == null
                 || req.getPoNumber().isEmpty()) {
 
-            po.setPoNumber(generatePoNumber());
+            po.setPoNumber(generatePoNumber(req.getProduct()));
         }
 
         return repo.save(po);
     }
 
-    public String generatePoNumber() {
+    public String generatePoNumber(
+            String product
+    ) {
 
-        String date =
-                LocalDate.now()
-                        .format(DateTimeFormatter.ofPattern("ddMMyy"));
+        long next =
+                repo.countByProduct(
+                        product
+                ) + 1;
 
-        long count = repo.count();
-
-        return "PO-" + date + "-" + String.format("%03d", count + 1);
+        return String.format(
+                "%07d-%s",
+                next,
+                product
+        );
     }
 
     public PurchaseOrder update(Long id,
