@@ -31,6 +31,8 @@ public enum BusinessRole {
     LOGISTICA(
             "Logística"
     ),
+    RESPONSIBLE_DE_SISTEMAS("Responsable de Sistemas"),
+    REPRESENTANTE_LEGAL("Representante legal (responsable de Seguridad e higiene)"),
 
     PRODUCCION(
             "Producción"
