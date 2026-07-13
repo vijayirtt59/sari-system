@@ -36,6 +36,13 @@ public enum BusinessRole {
     ),
     RESPONSIBLE_DE_SISTEMAS("Responsable de Sistemas"),
     REPRESENTANTE_LEGAL("Representante legal (responsable de Seguridad e higiene)"),
+    COLABORADOR_ENVIA_CORREO("Colaborador que envía el correo"),
+    RESPONSABLE_ADMINISTRACION("Responsable de Administración"),
+    AREA_GENERADO("El área que lo haya generado"),
+    RESPONSABLE_LOGISTICA("Responsable de Logística"),
+    RESPONSABLE_SEGURIDAD_HIGIENE("Responsable de seguridad e higiene (vocero)"),
+    RESPONSABLE_RH("Responsable de RH"),
+    RESPONSABLE_SEGURIDAD("Responsable de seguridad"),
 
     PRODUCCION(
             "Producción"

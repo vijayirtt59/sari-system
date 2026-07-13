@@ -1,6 +1,7 @@
 package com.sari.system.domain;
 
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,7 +19,7 @@ public class ProChange {
     private Long id;
 
     private int version;
-
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private LocalDate changeDate;
