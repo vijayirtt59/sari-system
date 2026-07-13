@@ -17,31 +17,42 @@ public class FileConversionService {
     private String libreOfficePath;
 
 
-    public void convertExcelToPdf(String inputPath, String outDir) throws Exception {
+    public void convertOfficeToPdf(
+            String inputPath,
+            String outDir
+    ) throws Exception {
 
-        ProcessBuilder pb = new ProcessBuilder(
-                libreOfficePath,
-                "--headless",
-                "--convert-to",
-                "pdf:calc_pdf_Export:{\"SinglePageSheets\":true}",
-                inputPath,
-                "--outdir", outDir
-        );
+        ProcessBuilder pb =
+                new ProcessBuilder(
 
-        pb.redirectErrorStream(true); // ✅ capture errors
+                        libreOfficePath,
 
-        Process process = pb.start();
+                        "--headless",
 
-        // ✅ log output (VERY helpful for debugging)
-        try (InputStream is = process.getInputStream()) {
-            String output = new String(is.readAllBytes());
-            System.out.println("LibreOffice Output: " + output);
-        }
+                        "--convert-to",
 
-        int exitCode = process.waitFor();
+                        "pdf",
+
+                        inputPath,
+
+                        "--outdir",
+
+                        outDir
+                );
+
+        pb.redirectErrorStream(true);
+
+        Process process =
+                pb.start();
+
+        int exitCode =
+                process.waitFor();
 
         if (exitCode != 0) {
-            throw new RuntimeException("❌ Excel → PDF conversion failed");
+
+            throw new RuntimeException(
+                    "Office → PDF failed"
+            );
         }
     }
 

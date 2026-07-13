@@ -27,9 +27,23 @@ public class FormTemplateService {
 
     public FormTemplate upload(MultipartFile file, String code, String title) throws Exception {
 
-        String excelPath = BASE_PATH + code + ".xlsx";
+        String originalName =
+                file.getOriginalFilename();
+
+        String extension =
+                originalName.substring(
+                        originalName.lastIndexOf(".") + 1
+                ).toLowerCase();
+
+        String sourcePath =
+                BASE_PATH +
+                        code +
+                        "." +
+                        extension;
         String pdfPath = BASE_PATH + code + ".pdf";
         String imagePath = BASE_PATH + code + ".png";
+
+
 
 // ✅ Ensure folder exists
         File dir = new File(BASE_PATH);
@@ -38,12 +52,13 @@ public class FormTemplateService {
         }
 
 // ✅ Save file
-        File excelFile = new File(BASE_PATH + code + ".xlsx");
-        file.transferTo(excelFile);
+        File sourceFile =
+                new File(sourcePath);
+        file.transferTo(sourceFile);
 
 
         // ✅ convert Excel → PDF
-        fileConversionService.convertExcelToPdf(excelPath, BASE_PATH);
+        fileConversionService.convertOfficeToPdf(sourcePath, BASE_PATH);
 
         // ✅ convert PDF → image
         fileConversionService.convertPdfToImage(pdfPath, imagePath);
@@ -54,7 +69,7 @@ public class FormTemplateService {
 
         form.setCode(code);
         form.setTitle(title);
-        form.setFileUrl("/uploads/" + code + ".xlsx");
+        form.setFileUrl("/uploads/" + code + "." + extension);
         form.setImageUrl("/uploads/" + code + ".png");
 
         return repo.save(form);
