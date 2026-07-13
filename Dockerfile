@@ -10,8 +10,11 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre
 
 RUN apt-get update && \
-    apt-get install -y libreoffice-calc && \
-    apt-get clean
+    apt-get install -y --no-install-recommends \
+    libreoffice-writer \
+    libreoffice-calc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
