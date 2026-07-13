@@ -28,6 +28,9 @@ public enum BusinessRole {
             "Dirección General"
     ),
 
+    VENTAS("Ventas"),
+    COMPRAS("Compras"),
+
     LOGISTICA(
             "Logística"
     ),
